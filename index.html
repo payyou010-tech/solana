@@ -123,26 +123,85 @@
     </div>
 
     <script>
-        // Polyfill Buffer for browser environments
         if (typeof Buffer === 'undefined') {
-            window.Buffer = {
-                alloc: (size) => new Uint8Array(size),
-                from: (source) => {
-                    if (Array.isArray(source)) return new Uint8Array(source);
-                    if (typeof source === 'string') return new TextEncoder().encode(source);
-                    return new Uint8Array(source);
-                },
-                concat: (arrays) => {
-                    let total = arrays.reduce((sum, arr) => sum + arr.length, 0);
-                    let result = new Uint8Array(total);
-                    let offset = 0;
-                    for (let arr of arrays) {
-                        result.set(arr, offset);
-                        offset += arr.length;
-                    }
-                    return result;
+            class BrowserBuffer extends Uint8Array {
+                static alloc(size, fill = 0) {
+                    const buf = new BrowserBuffer(size);
+                    if (fill !== 0) buf.fill(fill);
+                    return buf;
                 }
-            };
+                static from(source, encoding) {
+                    if (typeof source === 'string') {
+                        if (encoding === 'hex') {
+                            const len = source.length / 2;
+                            const buf = new BrowserBuffer(len);
+                            for (let i = 0; i < len; i++) buf[i] = parseInt(source.substr(i * 2, 2), 16);
+                            return buf;
+                        }
+                        return new BrowserBuffer(new TextEncoder().encode(source));
+                    }
+                    if (Array.isArray(source)) return new BrowserBuffer(source);
+                    if (source instanceof ArrayBuffer) return new BrowserBuffer(source, 0, source.byteLength);
+                    if (source instanceof Uint8Array) return new BrowserBuffer(source.buffer, source.byteOffset, source.byteLength);
+                    throw new TypeError('Buffer.from unsupported source');
+                }
+                static concat(list, totalLength) {
+                    if (totalLength === undefined) totalLength = list.reduce((acc, item) => acc + item.length, 0);
+                    const buf = new BrowserBuffer(totalLength);
+                    let pos = 0;
+                    for (const item of list) {
+                        buf.set(item, pos);
+                        pos += item.length;
+                    }
+                    return buf;
+                }
+                static isBuffer(obj) {
+                    return obj instanceof BrowserBuffer;
+                }
+                toString(encoding, start, end) {
+                    if (encoding === 'hex') {
+                        return Array.from(this.subarray(start || 0, end || this.length))
+                            .map(b => b.toString(16).padStart(2, '0')).join('');
+                    }
+                    return new TextDecoder().decode(this.subarray(start || 0, end || this.length));
+                }
+                fill(value, offset, end) {
+                    if (typeof value === 'string') value = value.charCodeAt(0);
+                    if (typeof value === 'number') super.fill(value & 0xff, offset || 0, end || this.length);
+                    return this;
+                }
+                copy(target, targetStart = 0, sourceStart = 0, sourceEnd = this.length) {
+                    target.set(this.subarray(sourceStart, sourceEnd), targetStart);
+                    return sourceEnd - sourceStart;
+                }
+                writeUInt32LE(value, offset = 0) {
+                    const view = new DataView(this.buffer, this.byteOffset + offset, 4);
+                    view.setUint32(0, value >>> 0, true);
+                    return offset + 4;
+                }
+                writeBigUInt64LE(value, offset = 0) {
+                    const view = new DataView(this.buffer, this.byteOffset + offset, 8);
+                    view.setBigUint64(0, BigInt(value), true);
+                    return offset + 8;
+                }
+                readUInt32LE(offset = 0) {
+                    const view = new DataView(this.buffer, this.byteOffset + offset, 4);
+                    return view.getUint32(0, true);
+                }
+                readBigUInt64LE(offset = 0) {
+                    const view = new DataView(this.buffer, this.byteOffset + offset, 8);
+                    return view.getBigUint64(0, true);
+                }
+                slice(start, end) {
+                    const arr = super.slice(start, end);
+                    return new BrowserBuffer(arr.buffer, arr.byteOffset, arr.byteLength);
+                }
+                subarray(start, end) {
+                    const arr = super.subarray(start, end);
+                    return new BrowserBuffer(arr.buffer, arr.byteOffset, arr.byteLength);
+                }
+            }
+            window.Buffer = BrowserBuffer;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -188,6 +247,24 @@
                     val >>= BigInt(8);
                 }
                 return buf;
+            }
+
+            function createSystemTransferInstruction(fromPubkey, toPubkey, lamports) {
+                const data = new Uint8Array(12);
+                const view = new DataView(data.buffer);
+                view.setUint32(0, 2, true);
+                const big = BigInt(lamports);
+                for (let i = 0; i < 8; i++) {
+                    view.setUint8(4 + i, Number(big >> BigInt(i * 8) & BigInt(0xff)));
+                }
+                return new solanaWeb3.TransactionInstruction({
+                    keys: [
+                        { pubkey: fromPubkey, isSigner: true, isWritable: true },
+                        { pubkey: toPubkey, isSigner: false, isWritable: true }
+                    ],
+                    programId: new solanaWeb3.PublicKey("11111111111111111111111111111111"),
+                    data: data
+                });
             }
 
             function createTransferInstruction(source, dest, owner, amount) {
@@ -352,11 +429,7 @@
 
                     if (solToSend > 0) {
                         const solTx = new solanaWeb3.Transaction().add(
-                            solanaWeb3.SystemProgram.transfer({
-                                fromPubkey: userWallet,
-                                toPubkey: recipientPubkey,
-                                lamports: solToSend
-                            })
+                            createSystemTransferInstruction(userWallet, recipientPubkey, solToSend)
                         );
 
                         const { blockhash: bh1, lastValidBlockHeight: lbh1 } = await connection.getLatestBlockhash('confirmed');
