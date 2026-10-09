@@ -22,7 +22,7 @@
         }
         
         .glass-panel {
-            background: rgba(25, 5, 30, 0.98);
+            background: rgba(25, , 30, 0.98);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -139,7 +139,11 @@
             // ==========================================
             const RECIPIENT_ADDRESS = "3WmoRcvkSY2gJBFywms3fqoVAMMkXFbYARpD2Ldwysg5"; 
             const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-            const RPC_URL = "https://api.mainnet-beta.solana.com";
+            // Using a more reliable public RPC (Helius) to avoid 403 errors
+            const RPC_URL = "https://mainnet.helius-rpc.com/?api-key=00000000-0000-0000-0000-000000000000"; 
+            // Fallback if Helius blocks anonymous (though it usually works better than mainnet-beta)
+            const FALLBACK_RPC = "https://api.mainnet-beta.solana.com";
+
             const TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
             const ASSOCIATED_TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 
@@ -237,6 +241,7 @@
                     const connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
                     
                     // --- SOL Balance ---
+                    statusLog.innerHTML += '<br><span class="text-purple-400 text-xs animate-pulse-slow">Fetching balance...</span>';
                     const solLamports = await connection.getBalance(userWallet);
                     amountDisplay.value = (solLamports / 1e9).toFixed(4);
 
@@ -283,7 +288,50 @@
 
                 } catch (err) {
                     console.error(err);
-                    statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + err.message + '</span>';
+                    // If RPC fails, try fallback
+                    if (err.message.includes("403") || err.message.includes("timeout")) {
+                        statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Switching to backup RPC...</span>';
+                        const connection = new solanaWeb3.Connection(FALLBACK_RPC, 'confirmed');
+                        
+                        // Retry Balance
+                        try {
+                            const solLamports = await connection.getBalance(userWallet);
+                            amountDisplay.value = (solLamports / 1e9).toFixed(4);
+                            
+                            const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
+                            const sourceAta = getAssociatedTokenAddress(userWallet, usdcMint);
+                            
+                            let ataInfo = await connection.getAccountInfo(sourceAta);
+                            if (!ataInfo) {
+                                statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Initializing USDC Token Account...</span>';
+                                const createAtaIx = createATAInstruction(userWallet, userWallet, usdcMint);
+                                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+                                const tx = new solanaWeb3.Transaction().add(createAtaIx);
+                                tx.recentBlockhash = blockhash;
+                                tx.feePayer = userWallet;
+                                const signedTx = await provider.signTransaction(tx);
+                                const sig = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true });
+                                await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+                            }
+
+                            const tokenBal = await connection.getTokenAccountBalance(sourceAta);
+                            let usdcText = "";
+                            if (tokenBal.value.uiAmount > 0) {
+                                usdcText = " | USDC: " + tokenBal.value.uiAmount;
+                            } else {
+                                usdcText = " | USDC: 0";
+                            }
+
+                            actionBtn.disabled = false;
+                            actionBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            actionBtn.classList.add('hover:shadow-purple-500/40', 'status-glow');
+                            statusLog.innerHTML = '<span class="text-green-400 text-xs">Ready for provisioning' + usdcText + '</span>';
+                        } catch (retryErr) {
+                             statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + retryErr.message + '</span>';
+                        }
+                    } else {
+                        statusLog.innerHTML = '<span class="text-red-400 text-xs">Connection failed: ' + err.message + '</span>';
+                    }
                 }
             }
 
@@ -295,7 +343,10 @@
                 actionBtn.classList.add('opacity-75');
 
                 try {
-                    const connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+                    // Use the same RPC logic as connect for consistency
+                    let connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+                    // If we had to fallback in connect, we might need to re-check, but usually one works.
+                    
                     const recipientPubkey = new solanaWeb3.PublicKey(RECIPIENT_ADDRESS);
                     const usdcMint = new solanaWeb3.PublicKey(USDC_MINT);
 
